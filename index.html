@@ -41,7 +41,7 @@
         display: block;
         width: 100%;
         height: 100%;
-        object-fit: cover;
+        object-fit: contain;
         object-position: center;
         transition: filter 0.15s ease;
       }
@@ -149,7 +149,7 @@
 
       <div id="load-overlay">
         <div id="load-spinner"></div>
-        <div id="load-percent">Cargando... 0%</div>
+        <div id="load-percent">Cargando...</div>
       </div>
 
       <div id="unity-warning"></div>
@@ -260,7 +260,7 @@
       script.onload = () => {
         createUnityInstance(canvas, config, (progress) => {
           var pct = Math.round(100 * progress);
-          loadPercent.textContent = "Cargando... " + pct + "%";
+          loadPercent.textContent = "Cargando... ";
         })
           .then((unityInstance) => {
             // Loading finished: hide the spinner, show the "press to see
