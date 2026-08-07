@@ -27,6 +27,12 @@
         max-width: 800px;
         margin: 0 !important;
       }
+      #play-overlay {
+        position: absolute;
+        inset: 0;
+        z-index: 10;
+        cursor: pointer;
+      }
       #play-button {
         position: absolute;
         inset: 0;
@@ -35,14 +41,86 @@
         display: block;
         width: 100%;
         height: 100%;
-        object-fit: fit;
+        object-fit: cover;
         object-position: center;
-        cursor: pointer;
-        z-index: 10;
         transition: filter 0.15s ease;
       }
-      #play-button:hover {
-        filter: brightness(1.08);
+      #play-overlay:hover #play-button {
+        filter: brightness(0.75);
+      }
+      #play-label {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        color: #fff;
+        font-family: Arial, Helvetica, sans-serif;
+        pointer-events: none;
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+      }
+      #play-label .play-icon {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background: rgba(0, 0, 0, 0.55);
+        border: 2px solid #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition:
+          transform 0.15s ease,
+          background 0.15s ease;
+      }
+      #play-overlay:hover .play-icon {
+        transform: scale(1.08);
+        background: rgba(0, 0, 0, 0.75);
+      }
+      #play-label .play-icon svg {
+        width: 26px;
+        height: 26px;
+        fill: #fff;
+        margin-left: 4px;
+      }
+      #play-label span {
+        font-size: 18px;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+      }
+
+      /* Loading overlay */
+      #load-overlay {
+        position: absolute;
+        inset: 0;
+        z-index: 20;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        background: #101010;
+        color: #fff;
+        font-family: Arial, Helvetica, sans-serif;
+      }
+      #load-spinner {
+        width: 48px;
+        height: 48px;
+        border: 4px solid rgba(255, 255, 255, 0.2);
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: spin 0.9s linear infinite;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      #load-percent {
+        font-size: 15px;
+        opacity: 0.85;
       }
     </style>
   </head>
@@ -54,17 +132,26 @@
         height="1080"
         tabindex="-1"
       ></canvas>
-      <img
-        id="play-button"
-        src="TemplateData/Campus-Central-UVG.webp"
-        alt="Play"
-      />
-      <div id="unity-loading-bar">
-        <div id="unity-logo"></div>
-        <div id="unity-progress-bar-empty">
-          <div id="unity-progress-bar-full"></div>
+
+      <div id="play-overlay" style="display: none">
+        <img
+          id="play-button"
+          src="TemplateData/Campus-Central-UVG.webp"
+          alt="Mapa UVG"
+        />
+        <div id="play-label">
+          <div class="play-icon">
+            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+          </div>
+          <span>Presiona para ver el mapa</span>
         </div>
       </div>
+
+      <div id="load-overlay">
+        <div id="load-spinner"></div>
+        <div id="load-percent">Cargando... 0%</div>
+      </div>
+
       <div id="unity-warning"></div>
     </div>
     <script>
@@ -164,33 +251,36 @@
         canvas.style.pointerEvents = "none";
       }
 
-      document.querySelector("#unity-loading-bar").style.display = "block";
+      var loadOverlay = document.querySelector("#load-overlay");
+      var loadPercent = document.querySelector("#load-percent");
+      var playOverlay = document.querySelector("#play-overlay");
 
       var script = document.createElement("script");
       script.src = loaderUrl;
       script.onload = () => {
         createUnityInstance(canvas, config, (progress) => {
-          document.querySelector("#unity-progress-bar-full").style.width =
-            100 * progress + "%";
+          var pct = Math.round(100 * progress);
+          loadPercent.textContent = "Cargando... " + pct + "%";
         })
           .then((unityInstance) => {
-            document.querySelector("#unity-loading-bar").style.display = "none";
-
-            var playButton = document.querySelector("#play-button");
+            // Loading finished: hide the spinner, show the "press to see
+            // the map" overlay instead of the canvas being interactive.
+            loadOverlay.style.display = "none";
+            playOverlay.style.display = "block";
 
             function enterFullscreen() {
               unityInstance.SetFullscreen(1);
-              playButton.style.display = "none";
+              playOverlay.style.display = "none";
               canvas.style.pointerEvents = "auto";
             }
 
             function exitedFullscreen() {
-              playButton.style.display = "block";
+              playOverlay.style.display = "block";
               canvas.style.pointerEvents = "none";
             }
 
-            // Clicking the play button image goes fullscreen
-            playButton.onclick = enterFullscreen;
+            // Clicking the play overlay (image + label) goes fullscreen
+            playOverlay.onclick = enterFullscreen;
 
             // Detect when the user leaves fullscreen (Esc key, browser UI,
             // etc.) and bring back the play button so the scene can only
