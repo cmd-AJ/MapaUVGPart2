@@ -110,7 +110,11 @@
         // performance, uncomment the following line:
         // config.devicePixelRatio = 1;
       } else {
-        // Desktop style: scale the canvas to fit the browser window, keeping 16:9 aspect ratio
+        // Desktop style: scale the canvas to fit the browser window while
+        // preserving the 16:9 aspect ratio, instead of a hardcoded 1920x1080 box.
+        // This is what was causing the canvas to overflow/crop on smaller
+        // screens (e.g. Mac laptop displays) since it was previously pinned
+        // to an exact pixel size regardless of viewport.
         canvas.style.width = "100%";
         canvas.style.height = "100%";
         canvas.style.aspectRatio = "16 / 9";
