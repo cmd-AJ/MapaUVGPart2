@@ -3138,7 +3138,7 @@ document,"ttq");</script>
       productName: "MapaUVG",
       productVersion: "0.1.0",
     };
-    config.devicePixelRatio = 1;
+    config.devicePixelRatio = Math.min(window.devicePixelRatio || 1, 2);
 
     var script = document.createElement("script");
     script.src = buildUrl + "/MapaUVGPart2.loader.js";
