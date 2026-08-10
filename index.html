@@ -17738,12 +17738,28 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
                                 width="100%"
                                 bis_skin_checked="1"
                               >
-                                <img
-                                  decoding="async"
-                                  id="imagen2342813198608"
-                                  src="./Visítanos - UVG_files/Campus-Central-UVG.jpg"
-                                  alt="Mapa Campus Central"
-                                />
+                                <div
+                                  class="uvg-map-trigger"
+                                  id="uvg-map-trigger-2"
+                                >
+                                  <img
+                                    decoding="async"
+                                    id="imagen2342813198608"
+                                    src="./Visítanos - UVG_files/Campus-Central-UVG.jpg"
+                                    alt="Mapa Campus Central"
+                                  />
+                                  <div class="uvg-map-hint">
+                                    <div class="uvg-play-icon">
+                                      <svg viewBox="0 0 24 24">
+                                        <path d="M8 5v14l11-7z" />
+                                      </svg>
+                                    </div>
+                                    <span
+                                      >Presiona para ver el mapa de la
+                                      Universidad del Valle de Guatemala</span
+                                    >
+                                  </div>
+                                </div>
                               </div>
                             </div>
                           </div>
@@ -19411,6 +19427,60 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
       #imagen2342813198608,
       #imagen342813198608 {
         cursor: pointer;
+        display: block;
+      }
+      .uvg-map-trigger {
+        position: relative;
+        display: inline-block;
+        width: 100%;
+        cursor: pointer;
+      }
+      .uvg-map-hint {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        color: #fff;
+        font-family: Arial, Helvetica, sans-serif;
+        pointer-events: none;
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+        text-align: center;
+        padding: 0 16px;
+      }
+      .uvg-map-hint .uvg-play-icon {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background: rgba(0, 0, 0, 0.55);
+        border: 2px solid #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition:
+          transform 0.15s ease,
+          background 0.15s ease;
+      }
+      .uvg-map-trigger:hover .uvg-play-icon {
+        transform: scale(1.08);
+        background: rgba(0, 0, 0, 0.75);
+      }
+      .uvg-map-trigger:hover img {
+        filter: brightness(0.75);
+      }
+      .uvg-map-hint .uvg-play-icon svg {
+        width: 26px;
+        height: 26px;
+        fill: #fff;
+        margin-left: 4px;
+      }
+      .uvg-map-hint span {
+        font-size: 18px;
+        font-weight: 600;
+        letter-spacing: 0.3px;
       }
     </style>
     <div id="uvg-unity-overlay">
@@ -19474,9 +19544,11 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
         closeBtn.addEventListener("click", closeMap);
 
         document
-          .querySelectorAll("#imagen2342813198608, #imagen342813198608")
-          .forEach(function (img) {
-            img.addEventListener("click", openMap);
+          .querySelectorAll(
+            ".uvg-map-trigger, #imagen2342813198608, #imagen342813198608",
+          )
+          .forEach(function (el) {
+            el.addEventListener("click", openMap);
           });
       })();
     </script>
