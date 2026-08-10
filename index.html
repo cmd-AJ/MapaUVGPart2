@@ -19450,6 +19450,11 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
         text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
         text-align: center;
         padding: 0 16px;
+        opacity: 0;
+        transition: opacity 0.15s ease;
+      }
+      .uvg-map-trigger:hover .uvg-map-hint {
+        opacity: 1;
       }
       .uvg-map-hint .uvg-play-icon {
         width: 64px;
@@ -19517,7 +19522,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
             productName: "MapaUVG",
             productVersion: "0.1.0",
           };
-          config.devicePixelRatio = 1;
+          config.devicePixelRatio = Math.min(window.devicePixelRatio || 1, 2);
 
           var script = document.createElement("script");
           script.src = buildUrl + "/MapaUVGPart2.loader.js";
