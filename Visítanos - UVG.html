@@ -3122,8 +3122,25 @@ document,"ttq");</script>
   var unityInstance = null;
   var loading = false;
 
+  function nudgeResize() {
+    setTimeout(function () {
+      window.dispatchEvent(new Event("resize"));
+    }, 150);
+    setTimeout(function () {
+      window.dispatchEvent(new Event("resize"));
+    }, 400);
+  }
+
+  window.addEventListener("resize", function () {
+    if (overlay.classList.contains("uvg-open")) nudgeResize();
+  });
+  window.addEventListener("orientationchange", function () {
+    if (overlay.classList.contains("uvg-open")) nudgeResize();
+  });
+
   function openMap() {
     overlay.classList.add("uvg-open");
+    nudgeResize();
     if (unityInstance || loading) return;
     loading = true;
 
@@ -3149,6 +3166,7 @@ document,"ttq");</script>
         .then(function (instance) {
           unityInstance = instance;
           loadOverlay.style.display = "none";
+          nudgeResize();
         })
         .catch(function (message) {
           alert(message);
