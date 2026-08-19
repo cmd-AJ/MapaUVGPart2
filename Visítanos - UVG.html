@@ -15,15 +15,6 @@
 <!-- End Google Tag Manager -->
 
 
-<!-- Google Tag Manager -->
-<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','GTM-NTRS22SS');</script>
-<!-- End Google Tag Manager -->
-
-	
     <meta name="facebook-domain-verification" content="lbmx785i32l36fhue5sxq2ghb570vx">
 	
 	
@@ -186,11 +177,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <body class="wp-singular admisiones-template-default single single-admisiones postid-2886 wp-theme-Divi wp-child-theme-Aumenta tribe-js et_pb_button_helper_class et_fullwidth_nav et_fullwidth_secondary_nav et_fixed_nav et_show_nav et_primary_nav_dropdown_animation_fade et_secondary_nav_dropdown_animation_fade et_header_style_left et_pb_footer_columns2 et_cover_background et_pb_gutter linux et_pb_gutters2 et_pb_pagebuilder_layout et_right_sidebar et_divi_theme et-db chrome" __processed_7e102037-9d41-4cf3-b70a-2ccbd35cf95a__="true" bis_register="W3sibWFzdGVyIjp0cnVlLCJleHRlbnNpb25JZCI6ImVwcGlvY2VtaG1ubGJoanBsY2drb2ZjaWllZ29tY29uIiwiYWRibG9ja2VyU3RhdHVzIjp7IkRJU1BMQVkiOiJlbmFibGVkIiwiRkFDRUJPT0siOiJlbmFibGVkIiwiVFdJVFRFUiI6ImVuYWJsZWQiLCJSRURESVQiOiJlbmFibGVkIiwiUElOVEVSRVNUIjoiZW5hYmxlZCIsIklOU1RBR1JBTSI6ImVuYWJsZWQiLCJUSUtUT0siOiJkaXNhYmxlZCIsIkxJTktFRElOIjoiZW5hYmxlZCIsIkNPTkZJRyI6ImRpc2FibGVkIn0sInZlcnNpb24iOiIyLjIuMSIsInNjb3JlIjoyMDIwMTB9XQ==">
 	<!-- Google Tag Manager (noscript) -->
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-TXS59NZ"
-height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-<!-- End Google Tag Manager (noscript) -->
-
-<!-- Google Tag Manager (noscript) -->
-<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-NTRS22SS"
 height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- End Google Tag Manager (noscript) -->
 
@@ -2998,7 +2984,6 @@ var et_modules_wrapper = {"builderCssContainerPrefix":"#et-boc","builderCssLayou
 function(b,c){var f="https://analytics.tiktok.com/i18n/pixel/events.js",g=c&&c.partner;a._i=a._i||{};a._i[b]=[];a._i[b]._u=f;a._i[b]._partner=g||"GoogleTagManagerClient";a._t=a._t||{};a._t[b]=+new Date;a._o=a._o||{};a._o[b]=c||{};a._partner=a._partner||"GoogleTagManagerClient";c=document.createElement("script");c.type="text/javascript";c.async=!0;c.src=f+"?sdkid\x3d"+b+"\x26lib\x3d"+e;b=document.getElementsByTagName("script")[0];b.parentNode.insertBefore(c,b)};a.load("D2N04S3C77U7GRFKCRUG");a.page()}(window,
 document,"ttq");</script>
 
-<!-- ===== Mapa 3D UVG (Unity WebGL) integration ===== -->
 <style>
   #uvg-unity-overlay {
     display: none;
@@ -3008,6 +2993,7 @@ document,"ttq");</script>
     background: #1a1a1a;
   }
   #uvg-unity-overlay.uvg-open { display: block; }
+
   #uvg-unity-close {
     position: absolute;
     top: 14px;
@@ -3024,11 +3010,14 @@ document,"ttq");</script>
     cursor: pointer;
   }
   #uvg-unity-close:hover { background: rgba(0, 0, 0, 0.8); }
-  #uvg-unity-canvas {
+
+  #uvg-unity-frame {
     width: 100%;
     height: 100%;
+    border: 0;
     display: block;
   }
+
   #uvg-unity-load {
     position: absolute;
     inset: 0;
@@ -3051,8 +3040,21 @@ document,"ttq");</script>
     animation: uvg-spin 0.9s linear infinite;
   }
   @keyframes uvg-spin { to { transform: rotate(360deg); } }
-  #imagen2342813198608, #imagen342813198608 { cursor: pointer; display: block; }
-  .uvg-map-trigger { position: relative; display: inline-block; width: 100%; cursor: pointer; }
+
+  body.uvg-map-open { overflow: hidden; }
+
+  #imagen2342813198608,
+  #imagen342813198608 {
+    cursor: pointer;
+    display: block;
+  }
+
+  .uvg-map-trigger {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+    cursor: pointer;
+  }
   .uvg-map-hint {
     position: absolute;
     left: 50%;
@@ -3071,9 +3073,7 @@ document,"ttq");</script>
     opacity: 0;
     transition: opacity 0.15s ease;
   }
-  .uvg-map-trigger:hover .uvg-map-hint {
-    opacity: 1;
-  }
+  .uvg-map-trigger:hover .uvg-map-hint { opacity: 1; }
   .uvg-map-hint .uvg-play-icon {
     width: 64px;
     height: 64px;
@@ -3089,9 +3089,7 @@ document,"ttq");</script>
     transform: scale(1.08);
     background: rgba(0, 0, 0, 0.75);
   }
-  .uvg-map-trigger:hover img {
-    filter: brightness(0.75);
-  }
+  .uvg-map-trigger:hover img { filter: brightness(0.75); }
   .uvg-map-hint .uvg-play-icon svg {
     width: 26px;
     height: 26px;
@@ -3104,85 +3102,108 @@ document,"ttq");</script>
     letter-spacing: 0.3px;
   }
 </style>
+
 <div id="uvg-unity-overlay">
   <button id="uvg-unity-close" aria-label="Cerrar mapa">&times;</button>
-  <canvas id="uvg-unity-canvas" tabindex="-1"></canvas>
+  <iframe
+    id="uvg-unity-frame"
+    title="Mapa 3D UVG"
+    allow="fullscreen; autoplay; gamepad; xr-spatial-tracking"
+    allowfullscreen></iframe>
   <div id="uvg-unity-load">
     <div id="uvg-unity-spinner"></div>
-    <div id="uvg-unity-percent">Cargando...</div>
+    <div id="uvg-unity-percent">Cargando mapa...</div>
   </div>
 </div>
+
 <script>
 (function () {
-  var overlay = document.getElementById("uvg-unity-overlay");
-  var closeBtn = document.getElementById("uvg-unity-close");
-  var canvas = document.getElementById("uvg-unity-canvas");
-  var loadOverlay = document.getElementById("uvg-unity-load");
-  var loadPercent = document.getElementById("uvg-unity-percent");
-  var unityInstance = null;
-  var loading = false;
+  "use strict";
 
-  function nudgeResize() {
-    setTimeout(function () {
-      window.dispatchEvent(new Event("resize"));
-    }, 150);
-    setTimeout(function () {
-      window.dispatchEvent(new Event("resize"));
-    }, 400);
+  var UNITY_PAGE = "index.html";
+
+  var overlay      = document.getElementById("uvg-unity-overlay");
+  var closeBtn     = document.getElementById("uvg-unity-close");
+  var frame        = document.getElementById("uvg-unity-frame");
+  var loadBox      = document.getElementById("uvg-unity-load");
+  var loaded       = false;
+  var preconnected = false;
+
+  function preconnect() {
+    if (preconnected) return;
+    preconnected = true;
+    var link = document.createElement("link");
+    link.rel = "prefetch";
+    link.href = UNITY_PAGE;
+    document.head.appendChild(link);
   }
 
-  window.addEventListener("resize", function () {
-    if (overlay.classList.contains("uvg-open")) nudgeResize();
-  });
-  window.addEventListener("orientationchange", function () {
-    if (overlay.classList.contains("uvg-open")) nudgeResize();
-  });
+  function requestFs(el) {
+    var fn = el.requestFullscreen || el.webkitRequestFullscreen ||
+      el.mozRequestFullScreen || el.msRequestFullscreen;
+    if (!fn) return;
+    try {
+      var p = fn.call(el);
+      if (p && typeof p.catch === "function") p.catch(function () {});
+    } catch (e) {}
+  }
+
+  function exitFs() {
+    var fn = document.exitFullscreen || document.webkitExitFullscreen ||
+      document.mozCancelFullScreen || document.msExitFullscreen;
+    if (fn) { try { fn.call(document); } catch (e) {} }
+  }
+
+  function fsElement() {
+    return document.fullscreenElement || document.webkitFullscreenElement ||
+      document.mozFullScreenElement || document.msFullscreenElement;
+  }
 
   function openMap() {
+    if (overlay.classList.contains("uvg-open")) return;
+
     overlay.classList.add("uvg-open");
-    nudgeResize();
-    if (unityInstance || loading) return;
-    loading = true;
+    document.body.classList.add("uvg-map-open");
+    requestFs(overlay);
 
-    var buildUrl = "Build";
-    var config = {
-      arguments: [],
-      dataUrl: buildUrl + "/MapaUVGPart2.data",
-      frameworkUrl: buildUrl + "/MapaUVGPart2.framework.js",
-      codeUrl: buildUrl + "/MapaUVGPart2.wasm",
-      streamingAssetsUrl: "StreamingAssets",
-      companyName: "DefaultCompany",
-      productName: "MapaUVG",
-      productVersion: "0.1.0",
-    };
-    config.devicePixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+    if (!loaded) {
+      loaded = true;
+      frame.src = UNITY_PAGE;
+      frame.addEventListener("load", function () {
+        loadBox.style.display = "none";
+      });
+    }
 
-    var script = document.createElement("script");
-    script.src = buildUrl + "/MapaUVGPart2.loader.js";
-    script.onload = function () {
-      createUnityInstance(canvas, config, function (progress) {
-        loadPercent.textContent = "Cargando... " + Math.round(100 * progress) + "%";
-      })
-        .then(function (instance) {
-          unityInstance = instance;
-          loadOverlay.style.display = "none";
-          nudgeResize();
-        })
-        .catch(function (message) {
-          alert(message);
-        });
-    };
-    document.body.appendChild(script);
+    setTimeout(function () {
+      try { frame.contentWindow.focus(); } catch (e) {}
+    }, 50);
   }
 
   function closeMap() {
     overlay.classList.remove("uvg-open");
+    document.body.classList.remove("uvg-map-open");
+    if (fsElement() === overlay) exitFs();
   }
 
   closeBtn.addEventListener("click", closeMap);
 
-  document.querySelectorAll(".uvg-map-trigger, #imagen2342813198608, #imagen342813198608").forEach(function (el) {
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && overlay.classList.contains("uvg-open")) closeMap();
+  });
+
+  ["fullscreenchange", "webkitfullscreenchange", "mozfullscreenchange", "MSFullscreenChange"]
+    .forEach(function (evt) {
+      document.addEventListener(evt, function () {
+        if (!fsElement() && overlay.classList.contains("uvg-open")) closeMap();
+      });
+    });
+
+  var triggers = document.querySelectorAll(
+    ".uvg-map-trigger, #imagen2342813198608, #imagen342813198608"
+  );
+  Array.prototype.forEach.call(triggers, function (el) {
     el.addEventListener("click", openMap);
+    el.addEventListener("mouseenter", preconnect, { once: true });
   });
 })();
 </script>

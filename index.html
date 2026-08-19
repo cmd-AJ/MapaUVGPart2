@@ -1,242 +1,265 @@
-<!-- ===== Mapa 3D UVG (Unity WebGL) integration — ISOLATED IFRAME VERSION ===== -->
-<!--
-  Reemplaza TODO el bloque anterior que empieza en
-      <!-- ===== Mapa 3D UVG (Unity WebGL) integration ===== -->
-y termina justo antes de
-<iframe id="_hjSafeContext_31202647" ...>
-  por este bloque. Cambio principal: Unity ahora corre dentro de un
-  <iframe>
-    aislado, con su propio hilo de JS y su propio pipeline de render. Ya no
-    compite con Hotjar, GTM, TikTok Pixel ni con el mega-menú de Divi por el
-    main thread. -->
+<!doctype html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Unity Web Player | MAPAURPUVG</title>
+    <link rel="shortcut icon" href="TemplateData/favicon.ico" />
+    <link rel="stylesheet" href="TemplateData/style.css" />
     <style>
-      #uvg-unity-overlay {
-        display: none;
-        position: fixed;
-        inset: 0;
-        z-index: 999999;
-        background: #1a1a1a;
-      }
-      #uvg-unity-overlay.uvg-open {
-        display: block;
-      }
-
-      #uvg-unity-close {
-        position: absolute;
-        top: 14px;
-        right: 18px;
-        z-index: 10;
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        border: none;
-        background: rgba(0, 0, 0, 0.55);
-        color: #fff;
-        font-size: 22px;
-        line-height: 1;
-        cursor: pointer;
-      }
-      #uvg-unity-close:hover {
-        background: rgba(0, 0, 0, 0.8);
-      }
-
-      #uvg-unity-frame {
+      html,
+      body {
+        margin: 0;
+        padding: 0;
         width: 100%;
         height: 100%;
-        border: 0;
+        overflow: hidden;
+        background: #1a1a1a;
+      }
+      #unity-container.unity-desktop {
+        position: relative;
+        width: 100%;
+        height: 100%;
+      }
+      .unity-desktop #unity-canvas {
+        width: 100%;
+        height: 100%;
         display: block;
       }
 
-      #uvg-unity-load {
+      /* Floating fullscreen toggle drawn over the scene */
+      #uvg-fs-toggle {
         position: absolute;
-        inset: 0;
-        z-index: 5;
-        display: flex;
-        flex-direction: column;
+        top: 14px;
+        right: 16px;
+        z-index: 30;
+        width: 44px;
+        height: 44px;
+        display: none;
         align-items: center;
         justify-content: center;
-        gap: 16px;
-        background: #101010;
-        color: #fff;
-        font-family: Arial, Helvetica, sans-serif;
-      }
-      #uvg-unity-spinner {
-        width: 48px;
-        height: 48px;
-        border: 4px solid rgba(255, 255, 255, 0.2);
-        border-top-color: #fff;
-        border-radius: 50%;
-        animation: uvg-spin 0.9s linear infinite;
-      }
-      @keyframes uvg-spin {
-        to {
-          transform: rotate(360deg);
-        }
-      }
-
-      /* Bloquea el scroll del body mientras el mapa está abierto: evita
-     que Divi / Hotjar disparen handlers de scroll durante el gameplay. */
-      body.uvg-map-open {
-        overflow: hidden;
-      }
-
-      #imagen2342813198608,
-      #imagen342813198608 {
-        cursor: pointer;
-        display: block;
-      }
-
-      .uvg-map-trigger {
-        position: relative;
-        display: inline-block;
-        width: 100%;
-        cursor: pointer;
-      }
-      .uvg-map-hint {
-        position: absolute;
-        left: 50%;
-        top: 50%;
-        transform: translate(-50%, -50%);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 10px;
-        color: #fff;
-        font-family: Arial, Helvetica, sans-serif;
-        pointer-events: none;
-        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
-        text-align: center;
-        padding: 0 16px;
-        opacity: 0;
-        transition: opacity 0.15s ease;
-      }
-      .uvg-map-trigger:hover .uvg-map-hint {
-        opacity: 1;
-      }
-      .uvg-map-hint .uvg-play-icon {
-        width: 64px;
-        height: 64px;
+        padding: 0;
+        border: none;
         border-radius: 50%;
         background: rgba(0, 0, 0, 0.55);
-        border: 2px solid #fff;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        color: #fff;
+        cursor: pointer;
         transition:
-          transform 0.15s ease,
-          background 0.15s ease;
+          background 0.15s ease,
+          transform 0.15s ease;
       }
-      .uvg-map-trigger:hover .uvg-play-icon {
+      #uvg-fs-toggle:hover {
+        background: rgba(0, 0, 0, 0.8);
         transform: scale(1.08);
-        background: rgba(0, 0, 0, 0.75);
       }
-      .uvg-map-trigger:hover img {
-        filter: brightness(0.75);
-      }
-      .uvg-map-hint .uvg-play-icon svg {
-        width: 26px;
-        height: 26px;
+      #uvg-fs-toggle svg {
+        width: 20px;
+        height: 20px;
         fill: #fff;
-        margin-left: 4px;
+        pointer-events: none;
       }
-      .uvg-map-hint span {
-        font-size: 18px;
-        font-weight: 600;
-        letter-spacing: 0.3px;
+      #uvg-fs-toggle .icon-exit {
+        display: none;
+      }
+      #uvg-fs-toggle.is-fullscreen .icon-enter {
+        display: none;
+      }
+      #uvg-fs-toggle.is-fullscreen .icon-exit {
+        display: block;
       }
     </style>
-
-    <div id="uvg-unity-overlay">
-      <button id="uvg-unity-close" aria-label="Cerrar mapa">&times;</button>
-      <iframe
-        id="uvg-unity-frame"
-        title="Mapa 3D UVG"
-        allow="fullscreen; autoplay; gamepad; xr-spatial-tracking"
-        allowfullscreen
-      ></iframe>
-      <div id="uvg-unity-load">
-        <div id="uvg-unity-spinner"></div>
-        <div id="uvg-unity-percent">Cargando mapa...</div>
+  </head>
+  <body>
+    <div id="unity-container" class="unity-desktop">
+      <canvas id="unity-canvas" tabindex="-1"></canvas>
+      <div id="unity-loading-bar">
+        <div id="unity-logo"></div>
+        <div id="unity-progress-bar-empty">
+          <div id="unity-progress-bar-full"></div>
+        </div>
       </div>
+      <div id="unity-warning"></div>
+      <button id="uvg-fs-toggle" type="button" aria-label="Pantalla completa">
+        <svg class="icon-enter" viewBox="0 0 24 24">
+          <path
+            d="M4 9V4h5v2H6v3H4zm0 6h2v3h3v2H4v-5zm14 0h2v5h-5v-2h3v-3zM15 6V4h5v5h-2V6h-3z"
+          />
+        </svg>
+        <svg class="icon-exit" viewBox="0 0 24 24">
+          <path
+            d="M9 4h2v5H6V7h3V4zm4 0h2v3h3v2h-5V4zM6 15h5v5H9v-3H6v-2zm7 0h5v2h-3v3h-2v-5z"
+          />
+        </svg>
+      </button>
     </div>
-
     <script>
-      (function () {
-        "use strict";
+      var canvas = document.querySelector("#unity-canvas");
 
-        // ─────────────────────────────────────────────────────────────
-        // AJUSTA ESTA RUTA: debe apuntar al index.html standalone de Unity
-        // (el archivo que ya te corre fluido por sí solo).
-        // ─────────────────────────────────────────────────────────────
-        var UNITY_PAGE = "/mapa3d/index.html";
-
-        var overlay = document.getElementById("uvg-unity-overlay");
-        var closeBtn = document.getElementById("uvg-unity-close");
-        var frame = document.getElementById("uvg-unity-frame");
-        var loadBox = document.getElementById("uvg-unity-load");
-        var loaded = false;
-        var preconnected = false;
-
-        // Precarga la conexión al hacer hover, para que al hacer clic
-        // el .wasm y el .data empiecen a bajar de inmediato.
-        function preconnect() {
-          if (preconnected) return;
-          preconnected = true;
-          var link = document.createElement("link");
-          link.rel = "prefetch";
-          link.href = UNITY_PAGE;
-          document.head.appendChild(link);
+      function unityShowBanner(msg, type) {
+        var warningBanner = document.querySelector("#unity-warning");
+        function updateBannerVisibility() {
+          warningBanner.style.display = warningBanner.children.length
+            ? "block"
+            : "none";
         }
-
-        function openMap() {
-          if (overlay.classList.contains("uvg-open")) return;
-
-          overlay.classList.add("uvg-open");
-          document.body.classList.add("uvg-map-open");
-
-          if (!loaded) {
-            loaded = true;
-            frame.src = UNITY_PAGE;
-            frame.addEventListener("load", function () {
-              // El iframe ya pintó; Unity sigue cargando su propio progreso
-              // dentro del iframe, así que ocultamos nuestro spinner al terminar.
-              loadBox.style.display = "none";
-            });
-          }
-
-          // Enfoca el iframe para que el teclado/mouse vayan directo a Unity
-          // y no queden atrapados por handlers del sitio padre.
+        var div = document.createElement("div");
+        div.innerHTML = msg;
+        warningBanner.appendChild(div);
+        if (type == "error") div.style = "background: red; padding: 10px;";
+        else {
+          if (type == "warning")
+            div.style = "background: yellow; padding: 10px;";
           setTimeout(function () {
-            try {
-              frame.contentWindow.focus();
-            } catch (e) {}
-          }, 50);
+            warningBanner.removeChild(div);
+            updateBannerVisibility();
+          }, 5000);
         }
+        updateBannerVisibility();
+      }
 
-        function closeMap() {
-          overlay.classList.remove("uvg-open");
-          document.body.classList.remove("uvg-map-open");
+      var buildUrl = "Build";
+      var loaderUrl = buildUrl + "/MapaUVGPart2.loader.js";
+      var config = {
+        arguments: [],
+        dataUrl: buildUrl + "/MapaUVGPart2.data",
+        frameworkUrl: buildUrl + "/MapaUVGPart2.framework.js",
+        codeUrl: buildUrl + "/MapaUVGPart2.wasm",
+        streamingAssetsUrl: "StreamingAssets",
+        companyName: "DefaultCompany",
+        productName: "MAPAURPUVG",
+        productVersion: "0.1",
+        showBanner: unityShowBanner,
+        webGLContextAttributes: {
+          powerPreference: "high-performance",
+        },
+      };
 
-          // Descomenta si quieres liberar memoria/GPU al cerrar
-          // (a costa de recargar Unity la próxima vez):
-          // frame.src = "about:blank"; loaded = false; loadBox.style.display = "flex";
+      // The canvas fills its container instead of the template's fixed
+      // 1920x1080 box, so on a large screen at dpr 2 it would render ~7x the
+      // pixels the default template did — that is the FPS drop. Cap the
+      // render target to a fixed pixel budget: the canvas still fills the
+      // window, it just doesn't rasterize more than ~1920x1080 worth of it.
+      var MAX_RENDER_PIXELS = 1920 * 1080;
+
+      function computeDevicePixelRatio() {
+        // Size against the screen, not the current window: Unity reads this
+        // once at startup and the canvas grows when entering fullscreen.
+        var w = Math.max(window.innerWidth || 0, screen.width || 0, 1);
+        var h = Math.max(window.innerHeight || 0, screen.height || 0, 1);
+        var dpr = window.devicePixelRatio || 1;
+        if (w * h * dpr * dpr > MAX_RENDER_PIXELS) {
+          dpr = Math.sqrt(MAX_RENDER_PIXELS / (w * h));
         }
+        return Math.max(0.5, Math.min(dpr, 2));
+      }
 
-        closeBtn.addEventListener("click", closeMap);
+      config.devicePixelRatio = computeDevicePixelRatio();
 
-        document.addEventListener("keydown", function (e) {
-          if (e.key === "Escape" && overlay.classList.contains("uvg-open"))
-            closeMap();
-        });
+      var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-        var triggers = document.querySelectorAll(
-          ".uvg-map-trigger, #imagen2342813198608, #imagen342813198608",
+      if (isMobile) {
+        var meta = document.createElement("meta");
+        meta.name = "viewport";
+        meta.content =
+          "width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes";
+        document.getElementsByTagName("head")[0].appendChild(meta);
+        document.querySelector("#unity-container").className = "unity-mobile";
+        canvas.className = "unity-mobile";
+      }
+      // Desktop keeps the CSS above: canvas fills its container (the parent
+      // iframe) instead of being pinned to a fixed 1920x1080 box.
+
+      document.querySelector("#unity-loading-bar").style.display = "block";
+
+      // --- Fullscreen toggle -------------------------------------------------
+      // Uses the browser Fullscreen API on the container (not Unity's
+      // SetFullscreen) so the HTML button stays drawn on top of the scene and
+      // can be clicked to exit again.
+      var fsToggle = document.querySelector("#uvg-fs-toggle");
+      var fsTarget = document.querySelector("#unity-container");
+
+      function fsElement() {
+        return (
+          document.fullscreenElement ||
+          document.webkitFullscreenElement ||
+          document.mozFullScreenElement ||
+          document.msFullscreenElement
         );
-        Array.prototype.forEach.call(triggers, function (el) {
-          el.addEventListener("click", openMap);
-          el.addEventListener("mouseenter", preconnect, { once: true });
+      }
+
+      function enterFs() {
+        var fn =
+          fsTarget.requestFullscreen ||
+          fsTarget.webkitRequestFullscreen ||
+          fsTarget.mozRequestFullScreen ||
+          fsTarget.msRequestFullscreen;
+        if (!fn) return;
+        try {
+          var p = fn.call(fsTarget);
+          if (p && typeof p.catch === "function") p.catch(function () {});
+        } catch (e) {}
+      }
+
+      function exitFs() {
+        var fn =
+          document.exitFullscreen ||
+          document.webkitExitFullscreen ||
+          document.mozCancelFullScreen ||
+          document.msExitFullscreen;
+        if (!fn) return;
+        try {
+          var p = fn.call(document);
+          if (p && typeof p.catch === "function") p.catch(function () {});
+        } catch (e) {}
+      }
+
+      fsToggle.addEventListener("click", function () {
+        if (fsElement()) exitFs();
+        else enterFs();
+      });
+
+      // Keep the icon in sync however fullscreen was entered or left (Esc,
+      // browser UI, the parent page's overlay, etc).
+      [
+        "fullscreenchange",
+        "webkitfullscreenchange",
+        "mozfullscreenchange",
+        "MSFullscreenChange",
+      ].forEach(function (evt) {
+        document.addEventListener(evt, function () {
+          var active = !!fsElement();
+          fsToggle.classList.toggle("is-fullscreen", active);
+          fsToggle.setAttribute(
+            "aria-label",
+            active ? "Salir de pantalla completa" : "Pantalla completa",
+          );
+          // Nudge Unity to resync the canvas after the transition.
+          setTimeout(function () {
+            window.dispatchEvent(new Event("resize"));
+          }, 150);
+          setTimeout(function () {
+            window.dispatchEvent(new Event("resize"));
+          }, 400);
         });
-      })();
-    </script></iframe
-  ></iframe
->
+      });
+
+      var script = document.createElement("script");
+      script.src = loaderUrl;
+      script.onload = () => {
+        createUnityInstance(canvas, config, (progress) => {
+          document.querySelector("#unity-progress-bar-full").style.width =
+            100 * progress + "%";
+        })
+          .then((unityInstance) => {
+            document.querySelector("#unity-loading-bar").style.display = "none";
+            fsToggle.style.display = "flex";
+          })
+          .catch((message) => {
+            alert(message);
+          });
+      };
+
+      document.body.appendChild(script);
+    </script>
+  </body>
+</html>
