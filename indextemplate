@@ -139,18 +139,25 @@
       // pixels the default template did — that is the FPS drop. Cap the
       // render target to a fixed pixel budget: the canvas still fills the
       // window, it just doesn't rasterize more than ~1920x1080 worth of it.
-      var MAX_RENDER_PIXELS = 1920 * 1080;
+      var MAX_RENDER_PIXELS = 2400 * 1350; // ~3.24M, a bit above 1080p
 
       function computeDevicePixelRatio() {
-        // Size against the screen, not the current window: Unity reads this
-        // once at startup and the canvas grows when entering fullscreen.
-        var w = Math.max(window.innerWidth || 0, screen.width || 0, 1);
-        var h = Math.max(window.innerHeight || 0, screen.height || 0, 1);
+        // Measure the CSS viewport only. Do NOT fold in screen.width/height:
+        // on Android those report the physical panel, which inflates the area
+        // and drives the ratio below 1, making the browser upscale a
+        // too-small render target (blurry text).
+        var w = window.innerWidth || 1920;
+        var h = window.innerHeight || 1080;
         var dpr = window.devicePixelRatio || 1;
+
         if (w * h * dpr * dpr > MAX_RENDER_PIXELS) {
           dpr = Math.sqrt(MAX_RENDER_PIXELS / (w * h));
         }
-        return Math.max(0.5, Math.min(dpr, 2));
+
+        // Never go below 1: at less than 1 CSS pixel per rendered pixel the
+        // result is always visibly soft. Cap at 2 — beyond that the extra
+        // fill-rate buys almost nothing on a phone-sized panel.
+        return Math.max(1, Math.min(dpr, 2));
       }
 
       config.devicePixelRatio = computeDevicePixelRatio();

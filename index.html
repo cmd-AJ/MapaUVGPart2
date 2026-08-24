@@ -3,6 +3,13 @@
   <head>
     <meta charset="utf-8" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <!-- Must be present at parse time. If this is injected later by script,
+         mobile browsers lay the page out in a ~980px fallback viewport first,
+         and any window.innerWidth read before that point is wrong. -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
     <title>Unity Web Player | MAPAURPUVG</title>
     <link rel="shortcut icon" href="TemplateData/favicon.ico" />
     <link rel="stylesheet" href="TemplateData/style.css" />
@@ -15,23 +22,41 @@
         height: 100%;
         overflow: hidden;
         background: #1a1a1a;
+        overscroll-behavior: none;
       }
-      #unity-container.unity-desktop {
+
+      /* Applies whether the container ends up .unity-desktop or .unity-mobile.
+         The ID + class selectors here match the specificity of the template's
+         own rules in TemplateData/style.css and load after it, so these win. */
+      #unity-container.unity-desktop,
+      #unity-container.unity-mobile {
         position: relative;
+        left: auto;
+        top: auto;
+        transform: none;
         width: 100%;
         height: 100%;
+        height: 100dvh; /* tracks mobile browser chrome; ignored where unsupported */
       }
-      .unity-desktop #unity-canvas {
+
+      #unity-container.unity-desktop #unity-canvas,
+      #unity-container.unity-mobile #unity-canvas {
         width: 100%;
         height: 100%;
         display: block;
+        /* Stop the browser from claiming touch gestures for scroll/zoom before
+           Unity sees them — otherwise drags on the map get eaten. */
+        touch-action: none;
+        -webkit-tap-highlight-color: transparent;
+        -webkit-user-select: none;
+        user-select: none;
       }
 
       /* Floating fullscreen toggle drawn over the scene */
       #uvg-fs-toggle {
         position: absolute;
-        top: 14px;
-        right: 16px;
+        top: calc(14px + env(safe-area-inset-top, 0px));
+        right: calc(16px + env(safe-area-inset-right, 0px));
         z-index: 30;
         width: 44px;
         height: 44px;
@@ -44,6 +69,8 @@
         background: rgba(0, 0, 0, 0.55);
         color: #fff;
         cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
         transition:
           background 0.15s ease,
           transform 0.15s ease;
@@ -51,6 +78,10 @@
       #uvg-fs-toggle:hover {
         background: rgba(0, 0, 0, 0.8);
         transform: scale(1.08);
+      }
+      #uvg-fs-toggle:focus-visible {
+        outline: 2px solid #fff;
+        outline-offset: 2px;
       }
       #uvg-fs-toggle svg {
         width: 20px;
@@ -67,6 +98,23 @@
       #uvg-fs-toggle.is-fullscreen .icon-exit {
         display: block;
       }
+
+      /* Touch targets under 48px are hard to hit; bump it on coarse pointers. */
+      @media (pointer: coarse) {
+        #uvg-fs-toggle {
+          width: 48px;
+          height: 48px;
+        }
+        #uvg-fs-toggle:hover {
+          transform: none;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        #uvg-fs-toggle {
+          transition: none;
+        }
+      }
     </style>
   </head>
   <body>
@@ -80,12 +128,12 @@
       </div>
       <div id="unity-warning"></div>
       <button id="uvg-fs-toggle" type="button" aria-label="Pantalla completa">
-        <svg class="icon-enter" viewBox="0 0 24 24">
+        <svg class="icon-enter" viewBox="0 0 24 24" aria-hidden="true">
           <path
             d="M4 9V4h5v2H6v3H4zm0 6h2v3h3v2H4v-5zm14 0h2v5h-5v-2h3v-3zM15 6V4h5v5h-2V6h-3z"
           />
         </svg>
-        <svg class="icon-exit" viewBox="0 0 24 24">
+        <svg class="icon-exit" viewBox="0 0 24 24" aria-hidden="true">
           <path
             d="M9 4h2v5H6V7h3V4zm4 0h2v3h3v2h-5V4zM6 15h5v5H9v-3H6v-2zm7 0h5v2h-3v3h-2v-5z"
           />
@@ -94,6 +142,7 @@
     </div>
     <script>
       var canvas = document.querySelector("#unity-canvas");
+      var container = document.querySelector("#unity-container");
 
       function unityShowBanner(msg, type) {
         var warningBanner = document.querySelector("#unity-warning");
@@ -134,47 +183,102 @@
         },
       };
 
-      // The canvas fills its container instead of the template's fixed
-      // 1920x1080 box, so on a large screen at dpr 2 it would render ~7x the
-      // pixels the default template did — that is the FPS drop. Cap the
-      // render target to a fixed pixel budget: the canvas still fills the
-      // window, it just doesn't rasterize more than ~1920x1080 worth of it.
-      var MAX_RENDER_PIXELS = 2400 * 1350; // ~3.24M, a bit above 1080p
+      // --- Mobile detection --------------------------------------------------
+      // Runs BEFORE the pixel ratio is computed. The old order computed the
+      // ratio first, which meant it measured whatever viewport existed before
+      // the mobile class was applied.
+      var isMobile =
+        /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ||
+        (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+
+      if (isMobile) {
+        container.className = "unity-mobile";
+        canvas.className = "unity-mobile";
+      }
+
+      // --- Render resolution -------------------------------------------------
+      // Render at the panel's native pixel density. Anything less means the
+      // browser upscales the buffer to fill the display, and UI text is the
+      // first thing that visibly softens.
+      //
+      // MAX_DPR is capped at 2 rather than 3: on a 3x phone panel the third
+      // multiple costs 2.25x the fill rate of 2x for a difference almost
+      // nobody can resolve at arm's length.
+      var MAX_DPR = 2;
+
+      // Floor for the adaptive step-down below. 1.0 = one rendered pixel per
+      // CSS pixel, which still looks soft on a retina display but is legible.
+      // Raise to MAX_DPR to disable quality reduction entirely and accept
+      // whatever frame rate the device gives.
+      var MIN_DPR = 1;
+
+      // Set by the adaptive pass once it has measured real frame times.
+      var qualityScale = 1;
 
       function computeDevicePixelRatio() {
-        // Measure the CSS viewport only. Do NOT fold in screen.width/height:
-        // on Android those report the physical panel, which inflates the area
-        // and drives the ratio below 1, making the browser upscale a
-        // too-small render target (blurry text).
-        var w = window.innerWidth || 1920;
-        var h = window.innerHeight || 1080;
         var dpr = window.devicePixelRatio || 1;
-
-        if (w * h * dpr * dpr > MAX_RENDER_PIXELS) {
-          dpr = Math.sqrt(MAX_RENDER_PIXELS / (w * h));
-        }
-
-        // Never go below 1: at less than 1 CSS pixel per rendered pixel the
-        // result is always visibly soft. Cap at 2 — beyond that the extra
-        // fill-rate buys almost nothing on a phone-sized panel.
-        return Math.max(1, Math.min(dpr, 2));
+        return Math.max(MIN_DPR, Math.min(dpr, MAX_DPR) * qualityScale);
       }
 
       config.devicePixelRatio = computeDevicePixelRatio();
 
-      var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      var unityInstance = null;
 
-      if (isMobile) {
-        var meta = document.createElement("meta");
-        meta.name = "viewport";
-        meta.content =
-          "width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes";
-        document.getElementsByTagName("head")[0].appendChild(meta);
-        document.querySelector("#unity-container").className = "unity-mobile";
-        canvas.className = "unity-mobile";
+      // Rotating a phone changes the aspect ratio and therefore the pixel
+      // budget. Recompute and push the new ratio into the running instance.
+      // Module.devicePixelRatio is read by Unity's canvas sizing each frame;
+      // guarded because it is not a documented public API.
+      function refreshDevicePixelRatio() {
+        var dpr = computeDevicePixelRatio();
+        config.devicePixelRatio = dpr;
+        try {
+          if (unityInstance && unityInstance.Module) {
+            unityInstance.Module.devicePixelRatio = dpr;
+          }
+        } catch (e) {}
       }
-      // Desktop keeps the CSS above: canvas fills its container (the parent
-      // iframe) instead of being pinned to a fixed 1920x1080 box.
+
+      // Unity reads the canvas size on resize, but the browser reports the new
+      // size before the layout/chrome transition has finished on mobile. Fire
+      // again after a beat so it settles on the final dimensions.
+      function nudgeResize() {
+        refreshDevicePixelRatio();
+        setTimeout(function () {
+          refreshDevicePixelRatio();
+          window.dispatchEvent(new Event("resize"));
+        }, 150);
+        setTimeout(function () {
+          refreshDevicePixelRatio();
+          window.dispatchEvent(new Event("resize"));
+        }, 400);
+      }
+
+      window.addEventListener("orientationchange", nudgeResize);
+      if (window.visualViewport) {
+        // Fires when the mobile URL bar collapses or expands, which changes
+        // the usable height without always firing a window resize.
+        window.visualViewport.addEventListener(
+          "resize",
+          refreshDevicePixelRatio,
+        );
+      }
+
+      // Block pinch-zoom and double-tap-zoom on the canvas so map gestures
+      // reach Unity instead of zooming the page.
+      canvas.addEventListener(
+        "gesturestart",
+        function (e) {
+          e.preventDefault();
+        },
+        { passive: false },
+      );
+      canvas.addEventListener(
+        "touchmove",
+        function (e) {
+          if (e.touches.length > 1) e.preventDefault();
+        },
+        { passive: false },
+      );
 
       document.querySelector("#unity-loading-bar").style.display = "block";
 
@@ -183,7 +287,14 @@
       // SetFullscreen) so the HTML button stays drawn on top of the scene and
       // can be clicked to exit again.
       var fsToggle = document.querySelector("#uvg-fs-toggle");
-      var fsTarget = document.querySelector("#unity-container");
+      var fsTarget = container;
+
+      var fsSupported = !!(
+        fsTarget.requestFullscreen ||
+        fsTarget.webkitRequestFullscreen ||
+        fsTarget.mozRequestFullScreen ||
+        fsTarget.msRequestFullscreen
+      );
 
       function fsElement() {
         return (
@@ -240,13 +351,7 @@
             "aria-label",
             active ? "Salir de pantalla completa" : "Pantalla completa",
           );
-          // Nudge Unity to resync the canvas after the transition.
-          setTimeout(function () {
-            window.dispatchEvent(new Event("resize"));
-          }, 150);
-          setTimeout(function () {
-            window.dispatchEvent(new Event("resize"));
-          }, 400);
+          nudgeResize();
         });
       });
 
@@ -257,9 +362,14 @@
           document.querySelector("#unity-progress-bar-full").style.width =
             100 * progress + "%";
         })
-          .then((unityInstance) => {
+          .then((instance) => {
+            unityInstance = instance;
             document.querySelector("#unity-loading-bar").style.display = "none";
-            fsToggle.style.display = "flex";
+            // iPhone Safari has no Fullscreen API for non-video elements, so
+            // showing a button that silently does nothing is worse than
+            // hiding it.
+            if (fsSupported) fsToggle.style.display = "flex";
+            nudgeResize();
           })
           .catch((message) => {
             alert(message);
