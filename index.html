@@ -52,6 +52,22 @@
         user-select: none;
       }
 
+      /* The template styles #unity-logo as a fixed-size box with the Unity
+         logo as a background image. Clear both so it can hold text instead.
+         Same specificity as the template rule, but this sheet loads after it. */
+      #unity-logo {
+        width: auto;
+        height: auto;
+        background: none;
+        margin: 0 auto 14px;
+        text-align: center;
+        color: #fff;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 20px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+      }
+
       /* Floating fullscreen toggle drawn over the scene */
       #uvg-fs-toggle {
         position: absolute;
@@ -121,7 +137,7 @@
     <div id="unity-container" class="unity-desktop">
       <canvas id="unity-canvas" tabindex="-1"></canvas>
       <div id="unity-loading-bar">
-        <div id="unity-logo"></div>
+        <div id="unity-logo">Cargando</div>
         <div id="unity-progress-bar-empty">
           <div id="unity-progress-bar-full"></div>
         </div>
@@ -236,6 +252,50 @@
             unityInstance.Module.devicePixelRatio = dpr;
           }
         } catch (e) {}
+      }
+
+      // Measure actual frame times and drop the render scale only if the
+      // device can't hold the target. This keeps text sharp everywhere that
+      // can afford it, instead of penalising every machine up front.
+      var TARGET_FPS = 50;
+      var SAMPLE_FRAMES = 90; // ~1.5s at 60fps
+      var MAX_STEPS = 3; // 1.0 -> 0.85 -> 0.72 -> 0.61
+
+      function measureAndAdapt(step) {
+        if (step > MAX_STEPS) return;
+
+        var frames = 0;
+        var start = performance.now();
+
+        function sample() {
+          frames++;
+          if (frames < SAMPLE_FRAMES) {
+            requestAnimationFrame(sample);
+            return;
+          }
+          var fps = (frames * 1000) / (performance.now() - start);
+          if (fps >= TARGET_FPS) return; // fast enough, keep full resolution
+
+          var next = qualityScale * 0.85;
+          // Already at the floor — another step would blur without helping.
+          if (
+            Math.min(window.devicePixelRatio || 1, MAX_DPR) * next <=
+            MIN_DPR
+          ) {
+            qualityScale = next;
+            refreshDevicePixelRatio();
+            return;
+          }
+          qualityScale = next;
+          refreshDevicePixelRatio();
+          measureAndAdapt(step + 1);
+        }
+
+        // Skip the first second: shader compilation and asset streaming right
+        // after load produce frame times that aren't representative.
+        setTimeout(function () {
+          requestAnimationFrame(sample);
+        }, 1000);
       }
 
       // Unity reads the canvas size on resize, but the browser reports the new
@@ -370,6 +430,7 @@
             // hiding it.
             if (fsSupported) fsToggle.style.display = "flex";
             nudgeResize();
+            measureAndAdapt(1);
           })
           .catch((message) => {
             alert(message);
